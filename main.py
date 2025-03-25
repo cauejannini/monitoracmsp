@@ -1,0 +1,112 @@
+import json
+
+import network.api as api
+import pandas as pd
+import util
+
+
+def is_of_interest(materia):
+    ementa = materia["Ementa"].lower()
+    return "calçada" in ementa \
+        or "calcada" in ementa \
+        or "passeio" in ementa \
+        or "cicli" in ementa \
+        or "ciclo" in ementa \
+        or "pedestre" in ementa \
+        or "veículo" in ementa \
+        or "veiculo" in ementa \
+        or "onibus" in ementa \
+        or "ônibus" in ementa \
+        or "transporte" in ementa \
+        or "estufa" in ementa \
+        or "gee" in ementa \
+        or "clima" in ementa \
+        or "14.933" in ementa \
+        or "16.802" in ementa \
+        or "18.225" in ementa
+
+
+def is_following(materia):
+    numero = materia["Numero"]
+    return 693 == numero
+
+
+        # Legislação de interesse:
+# Lei nº 14.933, de 5 de junho de 2009 - lei original de metas ambientais do transporte urbano
+# Lei nº 16.802, de 17 de janeiro de 2018 - alteração na lei de metas ambientais do transporte urbano
+# Lei nº 16.802, de 17 de janeiro de 2018 - alteração na lei de metas ambientais do transporte urbano
+# LEI 18.225 de 15/01/2025 - PL da fumaça do M Leite (altera novamente a lei de metas ambientais do transporte urbano)
+
+def find_materias(data):
+    jsonResponse = api.get_materias_eventos(data)
+
+    jsonResult = []
+    for materia in jsonResponse:
+
+        priority = -1
+        if is_following(materia):
+            priority = 0
+        elif is_of_interest(materia):
+            priority = 1
+
+        if priority >= 0:
+            autores = ""
+            for autor in materia["Autores"]:
+                autores += f'{autor["Nome"]}, '
+            autores = autores.removesuffix(", ")
+
+            eventos = ""
+            for evento in materia["Eventos"]:
+                eventos += f'{evento["Data"]} - {evento["Descricao"]}\n'
+
+            jsonEvento = {
+                "sigla": materia["Sigla"],
+                "numero": materia["Numero"],
+                "ano": materia["Ano"],
+                "autores": autores,
+                "ementa": materia["Ementa"],
+                "priority": priority,
+                "eventos": eventos,
+            }
+            jsonResult.append(jsonEvento)
+
+    # data = json.loads(jsonResult)
+    sorted_data = sorted(jsonResult, key=lambda x: x['priority'])
+
+    return sorted_data
+
+
+def print_eventos_for_date_pretty(date, show_eventos):
+    json = find_materias(date)
+
+    for materia in json:
+        printable = ""
+
+        if materia["priority"] == 0:
+            printable += "****** SEGUINDO ******\n"
+
+        printable += (f'Materia: {materia["sigla"]}-{materia["numero"]}/{materia["ano"]}\n'
+                     f'Autores: {materia["autores"]}\n'
+                     f'Ementa: {materia["ementa"]}\n')
+
+        if materia["sigla"] == "PL":
+            printable += f'Link: https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1' \
+                         f'&COD_PCSS_CMSP={materia["numero"]}&ANO_PCSS_CMSP={materia["ano"]}\n'
+
+        if show_eventos:
+            printable += f'Eventos: \n{materia["eventos"]}\n'
+
+        print(printable)
+
+
+def print_eventos_for_date_df(date):
+    json = find_materias(date)
+    df = pd.json_normalize(json)
+    util.print_df(df)
+
+
+print_eventos_for_date_pretty(date="2025-03-24", show_eventos=True)
+# print_eventos_for_date_df("2025-03-11")
+
+# https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1&COD_PCSS_CMSP=15&ANO_PCSS_CMSP=2006
+# https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1&COD_PCSS_CMSP=28&ANO_PCSS_CMSP=2011
