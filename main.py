@@ -27,8 +27,12 @@ def is_of_interest(materia):
 
 
 def is_following(materia):
+    sigla = materia["Sigla"]
     numero = materia["Numero"]
-    return 693 == numero
+    ano = materia["Ano"]
+    return (sigla == "PL" and numero == 438 and ano == 2024) or \
+        (sigla == "PL" and numero == 476 and ano == 2023) or \
+        (sigla == "PL" and numero == 17 and ano == 2025)
 
 
         # Legislação de interesse:
@@ -89,8 +93,20 @@ def print_eventos_for_date_pretty(date, show_eventos):
                      f'Autores: {materia["autores"]}\n'
                      f'Ementa: {materia["ementa"]}\n')
 
+        codigo_materia = ""
+
         if materia["sigla"] == "PL":
-            printable += f'Link: https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1' \
+            codigo_materia = "1"
+        elif materia["sigla"] == "PDL":
+            codigo_materia = "2"
+        elif materia["sigla"] == "PLO":
+            codigo_materia = "4"
+        elif materia["sigla"] == "RDS":
+            codigo_materia = "13"
+
+        if codigo_materia != "":
+            printable += f'Link: https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?' \
+                         f'COD_MTRA_LEGL={codigo_materia}' \
                          f'&COD_PCSS_CMSP={materia["numero"]}&ANO_PCSS_CMSP={materia["ano"]}\n'
 
         if show_eventos:
@@ -104,8 +120,9 @@ def print_eventos_for_date_df(date):
     df = pd.json_normalize(json)
     util.print_df(df)
 
+print_eventos_for_date_df("2025-04-17")
 
-print_eventos_for_date_pretty(date="2025-03-24", show_eventos=True)
+print_eventos_for_date_pretty(date="2025-04-17", show_eventos=True)
 # print_eventos_for_date_df("2025-03-11")
 
 # https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1&COD_PCSS_CMSP=15&ANO_PCSS_CMSP=2006
