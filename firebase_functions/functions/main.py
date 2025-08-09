@@ -29,7 +29,7 @@ def check_cmsp_json_on_request(req: https_fn.Request) -> https_fn.Response:
     return https_fn.Response("Email enviado!")
 
 
-@scheduler_fn.on_schedule(schedule="every day 04:00")
+@scheduler_fn.on_schedule(schedule="every day 23:00")
 def check_cmsp_json(event: scheduler_fn.ScheduledEvent) -> None:
     enviar_email()
 
