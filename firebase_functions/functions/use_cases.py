@@ -1,8 +1,4 @@
-import json
-
 import network.api as api
-import pandas as pd
-import util
 
 
 def is_of_interest(materia):
@@ -80,9 +76,10 @@ def find_materias(data):
     return sorted_data
 
 
-def print_eventos_for_date_pretty(date, show_eventos):
+def get_eventos_for_date_pretty(date, show_eventos):
     json = find_materias(date)
 
+    response = ""
     for materia in json:
         printable = ""
 
@@ -90,8 +87,8 @@ def print_eventos_for_date_pretty(date, show_eventos):
             printable += "****** SEGUINDO ******\n"
 
         printable += (f'Materia: {materia["sigla"]}-{materia["numero"]}/{materia["ano"]}\n'
-                     f'Autores: {materia["autores"]}\n'
-                     f'Ementa: {materia["ementa"]}\n')
+                     f'Ementa: {materia["ementa"]}\n'
+                     f'Autores: {materia["autores"]}\n')
 
         codigo_materia = ""
 
@@ -104,26 +101,21 @@ def print_eventos_for_date_pretty(date, show_eventos):
         elif materia["sigla"] == "RDS":
             codigo_materia = "13"
 
+        if show_eventos:
+            printable += f'Eventos: \n{materia["eventos"]}'
+
         if codigo_materia != "":
             printable += f'Link: https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?' \
                          f'COD_MTRA_LEGL={codigo_materia}' \
                          f'&COD_PCSS_CMSP={materia["numero"]}&ANO_PCSS_CMSP={materia["ano"]}\n'
 
-        if show_eventos:
-            printable += f'Eventos: \n{materia["eventos"]}\n'
+        response += printable+"\n"
 
-        print(printable)
+    return response
 
 
-def print_eventos_for_date_df(date):
-    json = find_materias(date)
-    df = pd.json_normalize(json)
-    util.print_df(df)
-
-print_eventos_for_date_df("2025-04-17")
-
-print_eventos_for_date_pretty(date="2025-04-17", show_eventos=True)
-# print_eventos_for_date_df("2025-03-11")
+# text = get_eventos_for_date_pretty(date="2025-04-17", show_eventos=True)
+# print(text)
 
 # https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1&COD_PCSS_CMSP=15&ANO_PCSS_CMSP=2006
 # https://splegisconsulta.saopaulo.sp.leg.br/Pesquisa/DetailsDetalhado?COD_MTRA_LEGL=1&COD_PCSS_CMSP=28&ANO_PCSS_CMSP=2011
