@@ -64,6 +64,3 @@ def enviar_email():
     smtp.starttls(context=context)
     smtp.login("monitoramentocmsp@gmail.com", "pqtu aygv raon kpsl")
     smtp.send_message(msg)
-
-
-enviar_email()
